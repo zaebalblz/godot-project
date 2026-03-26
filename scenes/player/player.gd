@@ -52,9 +52,18 @@ const FOOTSTEP_STREAMS: Array[AudioStream] = [
 @export var footstep_volume_db: float = -8.0
 @export var footstep_pitch_randomness: float = 0.04
 @export var footstep_volume_randomness_db: float = 1.2
+@export var attack_range: float = 2.1
+@export var attack_damage: float = 1.0
+@export var attack_cooldown: float = 0.42
+@export var attack_active_time: float = 0.14
+@export var attack_recover_time: float = 0.18
+@export var attack_viewmodel_offset: Vector2 = Vector2(64, 22)
+@export var attack_viewmodel_rotation: float = 18.0
 
 @onready var camera: Camera3D = $Camera3D
 @onready var footstep_player: AudioStreamPlayer3D = $AudioStreamPlayer3D
+@onready var interaction_ray: RayCast3D = $RayCast3D
+@onready var axe_sprite: AnimatedSprite2D = $WeaponCanvas/AxeSprite
 
 var _camera_pitch: float = 0.0
 var _camera_base_position: Vector3
@@ -74,6 +83,10 @@ var _bob_frequency_scale: float = 1.0
 var _current_speed: float = 0.0
 var _footstep_rng: RandomNumberGenerator = RandomNumberGenerator.new()
 var _last_footstep_index: int = -1
+var _attack_cooldown_timer: float = 0.0
+var _attack_timer: float = 0.0
+var _attack_recover_timer: float = 0.0
+var _attack_hit_applied: bool = false
 
 
 func _ready() -> void:
@@ -84,6 +97,8 @@ func _ready() -> void:
 	_current_speed = speed
 	_footstep_rng.randomize()
 	footstep_player.volume_db = footstep_volume_db
+	axe_sprite.visible = true
+	axe_sprite.position += attack_viewmodel_offset
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -97,6 +112,7 @@ func _unhandled_input(event: InputEvent) -> void:
 
 	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
 		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+		_try_start_attack()
 
 	if event is InputEventMouseMotion and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
 		_look_input += event.screen_relative
@@ -104,6 +120,7 @@ func _unhandled_input(event: InputEvent) -> void:
 
 func _process(delta: float) -> void:
 	_apply_look_input()
+	_update_attack(delta)
 	_update_camera_motion(delta)
 
 
@@ -275,6 +292,7 @@ func _update_camera_motion(delta: float) -> void:
 	camera.rotation.x = lerpf(camera.rotation.x, _camera_pitch + target_pitch_offset, blend)
 	camera.rotation.y = lerpf(camera.rotation.y, target_yaw, blend)
 	camera.rotation.z = lerpf(camera.rotation.z, target_roll, blend)
+	_update_weapon_viewmodel(blend)
 
 
 func _update_footsteps(delta: float, input_dir: Vector2, is_walking: bool, is_sprinting: bool) -> void:
@@ -314,3 +332,70 @@ func _play_footstep(base_pitch: float) -> void:
 	footstep_player.pitch_scale = base_pitch + _footstep_rng.randf_range(-footstep_pitch_randomness, footstep_pitch_randomness)
 	footstep_player.volume_db = footstep_volume_db + _footstep_rng.randf_range(-footstep_volume_randomness_db, footstep_volume_randomness_db)
 	footstep_player.play()
+
+
+func _try_start_attack() -> void:
+	if _attack_cooldown_timer > 0.0 or _attack_timer > 0.0 or _attack_recover_timer > 0.0:
+		return
+
+	_attack_cooldown_timer = attack_cooldown
+	_attack_timer = attack_active_time
+	_attack_recover_timer = attack_recover_time
+	_attack_hit_applied = false
+
+
+func _update_attack(delta: float) -> void:
+	_attack_cooldown_timer = maxf(_attack_cooldown_timer - delta, 0.0)
+
+	if _attack_timer > 0.0:
+		_attack_timer = maxf(_attack_timer - delta, 0.0)
+
+		if not _attack_hit_applied and _attack_timer <= attack_active_time * 0.4:
+			_attack_hit_applied = true
+			_perform_attack_hit()
+
+	if _attack_timer <= 0.0 and _attack_recover_timer > 0.0:
+		_attack_recover_timer = maxf(_attack_recover_timer - delta, 0.0)
+
+
+func _perform_attack_hit() -> void:
+	interaction_ray.target_position = Vector3(0.0, 0.0, -attack_range)
+	interaction_ray.force_raycast_update()
+
+	if not interaction_ray.is_colliding():
+		return
+
+	var collider := interaction_ray.get_collider()
+	if collider == null:
+		return
+
+	if collider.has_method("take_damage"):
+		collider.take_damage(attack_damage)
+	elif collider.has_method("hit"):
+		collider.hit(attack_damage)
+	elif collider.has_method("apply_damage"):
+		collider.apply_damage(attack_damage)
+
+
+func _update_weapon_viewmodel(blend: float) -> void:
+	var attack_progress: float = 0.0
+	var recover_progress: float = 0.0
+	var base_position: Vector2 = Vector2(1530, 850) + attack_viewmodel_offset
+	var target_position: Vector2 = base_position
+	var target_rotation: float = 0.0
+
+	if attack_active_time > 0.0 and _attack_timer > 0.0:
+		attack_progress = 1.0 - (_attack_timer / attack_active_time)
+
+	if attack_recover_time > 0.0 and _attack_recover_timer > 0.0:
+		recover_progress = 1.0 - (_attack_recover_timer / attack_recover_time)
+
+	if _attack_timer > 0.0:
+		target_position += Vector2(-46.0, 18.0).lerp(Vector2(88.0, -78.0), attack_progress)
+		target_rotation = deg_to_rad(-attack_viewmodel_rotation + attack_progress * attack_viewmodel_rotation * 2.2)
+	elif _attack_recover_timer > 0.0:
+		target_position += Vector2(88.0, -78.0).lerp(Vector2.ZERO, recover_progress)
+		target_rotation = lerpf(deg_to_rad(attack_viewmodel_rotation), 0.0, recover_progress)
+
+	axe_sprite.position = axe_sprite.position.lerp(target_position, blend)
+	axe_sprite.rotation = lerpf(axe_sprite.rotation, target_rotation, blend)

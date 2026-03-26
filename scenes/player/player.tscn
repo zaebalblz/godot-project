@@ -21,3 +21,11 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
 
 [node name="RayCast3D" type="RayCast3D" parent="." unique_id=203840121]
 target_position = Vector3(0, -1.3, 0)
+
+[node name="WeaponCanvas" type="CanvasLayer" parent="." unique_id=99127415]
+layer = 5
+
+[node name="AxeSprite" type="AnimatedSprite2D" parent="WeaponCanvas" unique_id=113803401]
+position = Vector2(1530, 850)
+scale = Vector2(4, 4)
+centered = false
