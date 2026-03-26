@@ -52,3 +52,5 @@ transform = Transform3D(0.866025, -0.404509, 0.293893, 0, 0.587785, 0.809017, -0
 light_color = Color(1, 0.956863, 0.878431, 1)
 light_energy = 1.35
 shadow_enabled = true
+
+[node name="Node3D" type="Node3D" parent="." unique_id=909085276]
