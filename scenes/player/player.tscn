@@ -43,7 +43,7 @@ animations = [{
 }],
 "loop": true,
 "name": &"idle",
-"speed": 1.0
+"speed": 0.8
 }, {
 "frames": [{
 "duration": 1.0,
@@ -86,6 +86,6 @@ layer = 5
 position = Vector2(1530, 850)
 scale = Vector2(6, 6)
 sprite_frames = SubResource("SpriteFrames_fm80t")
-animation = &"shoot"
+animation = &"idle"
 autoplay = "idle"
 centered = false
