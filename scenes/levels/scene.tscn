@@ -1,0 +1,54 @@
+[gd_scene format=3 uid="uid://dd1mynhe8icjl"]
+
+[ext_resource type="PackedScene" uid="uid://blq1u7kvj05f1" path="res://scenes/player/player.tscn" id="1_pvx5t"]
+[ext_resource type="Texture2D" uid="uid://djhm6mtmry4ti" path="res://assets/textures/gazon192x192.png" id="2_gazon"]
+[ext_resource type="Shader" uid="uid://rg4gfdoknkte" path="res://shaders/grass_floor.gdshader" id="3_shader"]
+
+[sub_resource type="Environment" id="Environment_j0b2n"]
+background_mode = 1
+background_color = Color(0.1, 0.12, 0.16, 1)
+ambient_light_source = 2
+ambient_light_color = Color(0.58, 0.63, 0.72, 1)
+ambient_light_energy = 0.4
+reflected_light_source = 1
+
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_w0jpb"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_pvx5t"]
+size = Vector3(12, 1, 12.025513)
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_floor"]
+render_priority = 0
+shader = ExtResource("3_shader")
+shader_parameter/grass_texture = ExtResource("2_gazon")
+shader_parameter/uv_scale = Vector2(3, 3)
+
+[sub_resource type="PlaneMesh" id="PlaneMesh_floor"]
+size = Vector2(12, 12)
+
+[node name="Scene" type="Node3D" unique_id=1848654476]
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=103287110]
+environment = SubResource("Environment_j0b2n")
+
+[node name="StaticBody3D" type="StaticBody3D" parent="." unique_id=1271394897]
+physics_material_override = SubResource("PhysicsMaterial_w0jpb")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="StaticBody3D" unique_id=1261741953]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.012756348)
+shape = SubResource("BoxShape3D_pvx5t")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="StaticBody3D" unique_id=223243350]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5005, 0)
+material_override = SubResource("ShaderMaterial_floor")
+lod_bias = 0.001
+mesh = SubResource("PlaneMesh_floor")
+
+[node name="Player" parent="." unique_id=1979842964 instance=ExtResource("1_pvx5t")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.65, 0)
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="." unique_id=29510743]
+transform = Transform3D(0.866025, -0.404509, 0.293893, 0, 0.587785, 0.809017, -0.5, -0.700629, 0.509037, 0, 4, 0)
+light_color = Color(1, 0.956863, 0.878431, 1)
+light_energy = 1.35
+shadow_enabled = true
