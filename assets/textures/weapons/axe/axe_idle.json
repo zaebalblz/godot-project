@@ -1,0 +1,34 @@
+{ "frames": {
+   "Sprite-0006 0.": {
+	"frame": { "x": 0, "y": 0, "w": 69, "h": 111 },
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": { "x": 0, "y": 0, "w": 69, "h": 111 },
+	"sourceSize": { "w": 69, "h": 111 },
+	"duration": 1000
+   },
+   "Sprite-0006 1.": {
+	"frame": { "x": 69, "y": 0, "w": 69, "h": 111 },
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": { "x": 0, "y": 0, "w": 69, "h": 111 },
+	"sourceSize": { "w": 69, "h": 111 },
+	"duration": 1000
+   }
+ },
+ "meta": {
+  "app": "http://www.aseprite.org/",
+  "version": "1.x-dev",
+  "image": "axe_idlet.png",
+  "format": "RGBA8888",
+  "size": { "w": 138, "h": 111 },
+  "scale": "1",
+  "frameTags": [
+  ],
+  "layers": [
+   { "name": "Layer 1", "opacity": 255, "blendMode": "normal" }
+  ],
+  "slices": [
+  ]
+ }
+}

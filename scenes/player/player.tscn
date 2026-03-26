@@ -1,10 +1,67 @@
 [gd_scene format=3 uid="uid://blq1u7kvj05f1"]
 
 [ext_resource type="Script" uid="uid://btakc1sgqxr48" path="res://scenes/player/player.gd" id="1_8afob"]
+[ext_resource type="Texture2D" uid="uid://c2voa08wid8su" path="res://assets/textures/weapons/axe/axe_idle.png" id="2_lvxji"]
+[ext_resource type="Texture2D" uid="uid://4npnhqufiehh" path="res://assets/textures/weapons/axe/axe_sheet.png" id="3_p47bc"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_0kuuv"]
 radius = 0.35
 height = 1.8
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_75vfm"]
+atlas = ExtResource("2_lvxji")
+region = Rect2(0, 0, 69, 111)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_0owmy"]
+atlas = ExtResource("2_lvxji")
+region = Rect2(69, 0, 69, 111)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_qek5x"]
+atlas = ExtResource("3_p47bc")
+region = Rect2(0, 0, 130, 111)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_5gtgg"]
+atlas = ExtResource("3_p47bc")
+region = Rect2(130, 0, 130, 111)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_h17s1"]
+atlas = ExtResource("3_p47bc")
+region = Rect2(260, 0, 130, 111)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_je7p5"]
+atlas = ExtResource("3_p47bc")
+region = Rect2(390, 0, 130, 111)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_fm80t"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_75vfm")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_0owmy")
+}],
+"loop": true,
+"name": &"idle",
+"speed": 1.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_qek5x")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_5gtgg")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_h17s1")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_je7p5")
+}],
+"loop": false,
+"name": &"shoot",
+"speed": 13.0
+}]
 
 [node name="Player" type="CharacterBody3D" unique_id=1979842964]
 script = ExtResource("1_8afob")
@@ -27,5 +84,8 @@ layer = 5
 
 [node name="AxeSprite" type="AnimatedSprite2D" parent="WeaponCanvas" unique_id=113803401]
 position = Vector2(1530, 850)
-scale = Vector2(4, 4)
+scale = Vector2(6, 6)
+sprite_frames = SubResource("SpriteFrames_fm80t")
+animation = &"shoot"
+autoplay = "idle"
 centered = false

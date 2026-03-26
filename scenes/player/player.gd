@@ -7,7 +7,7 @@ const FOOTSTEP_STREAMS: Array[AudioStream] = [
 	preload("res://assets/audio/sfx/footsteps/grass_step_04.wav"),
 ]
 
-@export var speed: float = 5.0 #5
+@export var speed: float = 5.0 
 @export var walk_speed: float = 2.35
 @export var sprint_speed: float = 7.8
 @export var ground_acceleration: float = 22.0
@@ -57,8 +57,13 @@ const FOOTSTEP_STREAMS: Array[AudioStream] = [
 @export var attack_cooldown: float = 0.42
 @export var attack_active_time: float = 0.14
 @export var attack_recover_time: float = 0.18
-@export var attack_viewmodel_offset: Vector2 = Vector2(64, 22)
+@export var attack_viewmodel_offset: Vector2 = Vector2(0, 17)
 @export var attack_viewmodel_rotation: float = 18.0
+@export var weapon_screen_margin: Vector2 = Vector2(0, 18)
+@export var weapon_canvas_size: Vector2 = Vector2(130, 111)
+@export var idle_viewmodel_offset: Vector2 = Vector2(61, 0)
+@export var shoot_viewmodel_offset: Vector2 = Vector2.ZERO
+@export var weapon_shoot_visual_duration: float = 0.22
 
 @onready var camera: Camera3D = $Camera3D
 @onready var footstep_player: AudioStreamPlayer3D = $AudioStreamPlayer3D
@@ -87,6 +92,7 @@ var _attack_cooldown_timer: float = 0.0
 var _attack_timer: float = 0.0
 var _attack_recover_timer: float = 0.0
 var _attack_hit_applied: bool = false
+var _weapon_anim_timer: float = 0.0
 
 
 func _ready() -> void:
@@ -98,7 +104,7 @@ func _ready() -> void:
 	_footstep_rng.randomize()
 	footstep_player.volume_db = footstep_volume_db
 	axe_sprite.visible = true
-	axe_sprite.position += attack_viewmodel_offset
+	_show_idle_viewmodel()
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -342,6 +348,10 @@ func _try_start_attack() -> void:
 	_attack_timer = attack_active_time
 	_attack_recover_timer = attack_recover_time
 	_attack_hit_applied = false
+	_weapon_anim_timer = weapon_shoot_visual_duration
+	axe_sprite.animation = "shoot"
+	axe_sprite.set_frame_and_progress(0, 0.0)
+	axe_sprite.stop()
 
 
 func _update_attack(delta: float) -> void:
@@ -356,6 +366,12 @@ func _update_attack(delta: float) -> void:
 
 	if _attack_timer <= 0.0 and _attack_recover_timer > 0.0:
 		_attack_recover_timer = maxf(_attack_recover_timer - delta, 0.0)
+
+	if _weapon_anim_timer > 0.0:
+		_weapon_anim_timer = maxf(_weapon_anim_timer - delta, 0.0)
+		_update_weapon_attack_frame()
+	elif axe_sprite.animation == "shoot":
+		_show_idle_viewmodel()
 
 
 func _perform_attack_hit() -> void:
@@ -378,24 +394,33 @@ func _perform_attack_hit() -> void:
 
 
 func _update_weapon_viewmodel(blend: float) -> void:
-	var attack_progress: float = 0.0
-	var recover_progress: float = 0.0
-	var base_position: Vector2 = Vector2(1530, 850) + attack_viewmodel_offset
-	var target_position: Vector2 = base_position
-	var target_rotation: float = 0.0
+	var viewport_size: Vector2 = get_viewport().get_visible_rect().size
+	var current_frame_size: Vector2 = weapon_canvas_size * axe_sprite.scale
+	var animation_offset: Vector2 = shoot_viewmodel_offset
 
-	if attack_active_time > 0.0 and _attack_timer > 0.0:
-		attack_progress = 1.0 - (_attack_timer / attack_active_time)
+	if axe_sprite.animation == "idle":
+		animation_offset = idle_viewmodel_offset
 
-	if attack_recover_time > 0.0 and _attack_recover_timer > 0.0:
-		recover_progress = 1.0 - (_attack_recover_timer / attack_recover_time)
+	var screen_anchor: Vector2 = viewport_size - weapon_screen_margin + attack_viewmodel_offset
+	var base_position: Vector2 = screen_anchor - current_frame_size + animation_offset * axe_sprite.scale
+	axe_sprite.position = base_position.round()
+	axe_sprite.rotation = 0.0
 
-	if _attack_timer > 0.0:
-		target_position += Vector2(-46.0, 18.0).lerp(Vector2(88.0, -78.0), attack_progress)
-		target_rotation = deg_to_rad(-attack_viewmodel_rotation + attack_progress * attack_viewmodel_rotation * 2.2)
-	elif _attack_recover_timer > 0.0:
-		target_position += Vector2(88.0, -78.0).lerp(Vector2.ZERO, recover_progress)
-		target_rotation = lerpf(deg_to_rad(attack_viewmodel_rotation), 0.0, recover_progress)
 
-	axe_sprite.position = axe_sprite.position.lerp(target_position, blend)
-	axe_sprite.rotation = lerpf(axe_sprite.rotation, target_rotation, blend)
+func _show_idle_viewmodel() -> void:
+	axe_sprite.play("idle")
+	axe_sprite.frame = 0
+
+
+func _update_weapon_attack_frame() -> void:
+	var total_duration: float = maxf(weapon_shoot_visual_duration, 0.001)
+	var elapsed: float = total_duration - _weapon_anim_timer
+	var progress: float = clampf(elapsed / total_duration, 0.0, 0.9999)
+	var frame_count: int = axe_sprite.sprite_frames.get_frame_count("shoot")
+
+	if frame_count <= 0:
+		return
+
+	var frame_index: int = mini(int(progress * frame_count), frame_count - 1)
+	axe_sprite.animation = "shoot"
+	axe_sprite.frame = frame_index

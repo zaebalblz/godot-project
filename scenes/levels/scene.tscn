@@ -35,11 +35,11 @@ environment = SubResource("Environment_j0b2n")
 physics_material_override = SubResource("PhysicsMaterial_w0jpb")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="StaticBody3D" unique_id=1261741953]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.068050385, -0.42370224, 0.20490742)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.38297653, -1.4581518, -0.53457546)
 shape = SubResource("BoxShape3D_pvx5t")
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="StaticBody3D" unique_id=223243350]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.039424896, 0.16544753, 0.17564106)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.27550125, -0.86900204, -0.5638418)
 material_override = SubResource("ShaderMaterial_floor")
 lod_bias = 0.001
 mesh = SubResource("PlaneMesh_floor")
