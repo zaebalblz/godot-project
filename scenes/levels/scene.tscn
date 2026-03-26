@@ -15,7 +15,7 @@ reflected_light_source = 1
 [sub_resource type="PhysicsMaterial" id="PhysicsMaterial_w0jpb"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_pvx5t"]
-size = Vector3(12, 1, 12.025513)
+size = Vector3(34.919315, 1, 35.071106)
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_floor"]
 render_priority = 0
@@ -24,7 +24,7 @@ shader_parameter/grass_texture = ExtResource("2_gazon")
 shader_parameter/uv_scale = Vector2(3, 3)
 
 [sub_resource type="PlaneMesh" id="PlaneMesh_floor"]
-size = Vector2(12, 12)
+size = Vector2(35, 35)
 
 [node name="Scene" type="Node3D" unique_id=1848654476]
 
@@ -35,11 +35,11 @@ environment = SubResource("Environment_j0b2n")
 physics_material_override = SubResource("PhysicsMaterial_w0jpb")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="StaticBody3D" unique_id=1261741953]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.012756348)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.068050385, -0.42370224, 0.20490742)
 shape = SubResource("BoxShape3D_pvx5t")
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="StaticBody3D" unique_id=223243350]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5005, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.039424896, 0.16544753, 0.17564106)
 material_override = SubResource("ShaderMaterial_floor")
 lod_bias = 0.001
 mesh = SubResource("PlaneMesh_floor")
@@ -52,5 +52,3 @@ transform = Transform3D(0.866025, -0.404509, 0.293893, 0, 0.587785, 0.809017, -0
 light_color = Color(1, 0.956863, 0.878431, 1)
 light_energy = 1.35
 shadow_enabled = true
-
-[node name="Node3D" type="Node3D" parent="." unique_id=909085276]
