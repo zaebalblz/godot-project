@@ -7,7 +7,7 @@ const FOOTSTEP_STREAMS: Array[AudioStream] = [
 	preload("res://assets/audio/sfx/footsteps/grass_step_04.wav"),
 ]
 
-@export var speed: float = 15.0 #5
+@export var speed: float = 5;.0 #5
 @export var walk_speed: float = 2.35
 @export var sprint_speed: float = 7.8
 @export var ground_acceleration: float = 22.0
