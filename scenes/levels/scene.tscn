@@ -1,9 +1,10 @@
 [gd_scene format=3 uid="uid://dd1mynhe8icjl"]
 
 [ext_resource type="PackedScene" uid="uid://blq1u7kvj05f1" path="res://scenes/player/player.tscn" id="1_pvx5t"]
+[ext_resource type="PackedScene" uid="uid://s7v50w0ltpfx" path="res://scenes/enemies/pale_watcher.tscn" id="2_enemy"]
 [ext_resource type="Texture2D" uid="uid://djhm6mtmry4ti" path="res://assets/textures/gazon192x192.png" id="2_gazon"]
 [ext_resource type="Shader" uid="uid://rg4gfdoknkte" path="res://shaders/grass_floor.gdshader" id="3_shader"]
-[ext_resource type="Texture2D" uid="uid://coiheadjham3j" path="res://assets/textures/sky.png" id="4_sky"]
+[ext_resource type="Texture2D" uid="uid://ct5c2hg5t76wq" path="res://assets/textures/sky.png" id="4_sky"]
 [ext_resource type="Texture2D" uid="uid://de5rf41jpei4d" path="res://assets/textures/sun.png" id="5_sun"]
 
 [sub_resource type="PanoramaSkyMaterial" id="PanoramaSkyMaterial_sky"]
@@ -85,18 +86,38 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 34.723408, -0.5397482, 16.964
 shape = SubResource("BoxShape3D_pvx5t")
 
 [node name="Player" parent="." unique_id=1979842964 instance=ExtResource("1_pvx5t")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.65, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 28.035902, 5.9610977, 13.679697)
+
+[node name="PaleWatcher" parent="." unique_id=1980032503 instance=ExtResource("2_enemy")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 34.996292, 0.036824793, 20.80478)
 
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="." unique_id=29510743]
-transform = Transform3D(0.866025, -0.404509, 0.293893, 0, 0.587785, 0.809017, -0.5, -0.700629, 0.509037, 0, 4, 0)
+transform = Transform3D(0.8660253, -0.40450877, 0.29389265, 0, 0.5877851, 0.8090171, -0.50000024, -0.7006293, 0.5090368, 28.743027, 4, 14.355295)
 light_color = Color(1, 0.956863, 0.878431, 1)
 light_energy = 1.35
 shadow_enabled = true
 
 [node name="SunSprite" type="Sprite3D" parent="." unique_id=1507613089]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 46, -65)
-billboard = 1
-shaded = false
-texture_filter = 0
 pixel_size = 0.12
+billboard = 1
+texture_filter = 0
 texture = ExtResource("5_sun")
+
+[node name="PaleWatcher2" parent="." unique_id=893508066 instance=ExtResource("2_enemy")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 78.40565, -0.03774774, 8.224069)
+
+[node name="PaleWatcher3" parent="." unique_id=1649040306 instance=ExtResource("2_enemy")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 73.08634, -0.037748218, 4.306728)
+
+[node name="PaleWatcher4" parent="." unique_id=1921813731 instance=ExtResource("2_enemy")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 74.416275, -0.03774774, 21.417267)
+
+[node name="PaleWatcher5" parent="." unique_id=1307230572 instance=ExtResource("2_enemy")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 80.83126, -0.03774774, 1.3610024)
+
+[node name="PaleWatcher6" parent="." unique_id=80793478 instance=ExtResource("2_enemy")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 78.0778, -0.03774774, 13.127438)
+
+[node name="PaleWatcher7" parent="." unique_id=1116807222 instance=ExtResource("2_enemy")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 82.67906, -0.037748218, 3.7380123)

@@ -6,6 +6,9 @@ const FOOTSTEP_STREAMS: Array[AudioStream] = [
 	preload("res://assets/audio/sfx/footsteps/grass_step_03.wav"),
 	preload("res://assets/audio/sfx/footsteps/grass_step_04.wav"),
 ]
+const HAMMER_HIT_STREAM: AudioStream = preload("res://assets/audio/sfx/weapons/hammer_hit_01.wav")
+const WEAPON_SLOT_HAMMER: int = 1
+const WEAPON_SLOT_GUN: int = 2
 
 @export var speed: float = 5.0 
 @export var walk_speed: float = 2.35
@@ -53,7 +56,9 @@ const FOOTSTEP_STREAMS: Array[AudioStream] = [
 @export var footstep_volume_db: float = -8.0
 @export var footstep_pitch_randomness: float = 0.04
 @export var footstep_volume_randomness_db: float = 1.2
-@export var attack_range: float = 2.1
+@export var hammer_hit_volume_db: float = -8.5
+@export var hammer_hit_pitch_randomness: float = 0.05
+@export var attack_range: float = 1.45
 @export var attack_damage: float = 1.0
 @export var attack_cooldown: float = 0.42
 @export var attack_active_time: float = 0.14
@@ -67,12 +72,13 @@ const FOOTSTEP_STREAMS: Array[AudioStream] = [
 @export var weapon_shoot_visual_duration: float = 0.22
 @export var left_hand_screen_margin: Vector2 = Vector2(0, 0)
 @export var left_hand_viewmodel_offset: Vector2 = Vector2(0, 0)
-@export var left_hand_canvas_size: Vector2 = Vector2(53, 46)
-
+@export var left_hand_canvas_size: Vector2 = Vector2(53, 46) 
 @onready var camera: Camera3D = $Camera3D
 @onready var footstep_player: AudioStreamPlayer3D = $AudioStreamPlayer3D
 @onready var interaction_ray: RayCast3D = $RayCast3D
+@onready var hammer_hit_player: AudioStreamPlayer = $HammerHitPlayer
 @onready var axe_sprite: AnimatedSprite2D = $WeaponCanvas/AxeSprite
+@onready var gun_sprite: AnimatedSprite2D = $WeaponCanvas/GunSprite
 @onready var left_hand_sprite: AnimatedSprite2D = $WeaponCanvas/LeftHandSprite
 
 var _camera_pitch: float = 0.0
@@ -98,9 +104,11 @@ var _attack_timer: float = 0.0
 var _attack_recover_timer: float = 0.0
 var _attack_hit_applied: bool = false
 var _weapon_anim_timer: float = 0.0
+var _current_weapon_slot: int = WEAPON_SLOT_HAMMER
 
 
 func _ready() -> void:
+	add_to_group("player")
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 	camera.current = true
 	floor_snap_length = 0.2
@@ -108,9 +116,12 @@ func _ready() -> void:
 	_current_speed = speed
 	_footstep_rng.randomize()
 	footstep_player.volume_db = footstep_volume_db
-	axe_sprite.visible = true
+	hammer_hit_player.stream = HAMMER_HIT_STREAM
+	hammer_hit_player.volume_db = hammer_hit_volume_db
+	axe_sprite.visible = false
+	gun_sprite.visible = false
 	left_hand_sprite.visible = true
-	_show_idle_viewmodel()
+	_set_weapon_slot(WEAPON_SLOT_HAMMER)
 	left_hand_sprite.play("idle")
 
 
@@ -123,9 +134,25 @@ func _unhandled_input(event: InputEvent) -> void:
 		_walk_mode_enabled = not _walk_mode_enabled
 		return
 
+	if event is InputEventKey and event.pressed and not event.echo:
+		if event.physical_keycode == KEY_1:
+			_set_weapon_slot(WEAPON_SLOT_HAMMER)
+			return
+		if event.physical_keycode == KEY_2:
+			_set_weapon_slot(WEAPON_SLOT_GUN)
+			return
+
 	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
 		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
-		_try_start_attack()
+		if _current_weapon_slot == WEAPON_SLOT_HAMMER:
+			_try_start_attack()
+	elif event is InputEventMouseButton and event.pressed:
+		if event.button_index == MOUSE_BUTTON_WHEEL_UP:
+			_cycle_weapon(-1)
+			return
+		if event.button_index == MOUSE_BUTTON_WHEEL_DOWN:
+			_cycle_weapon(1)
+			return
 
 	if event is InputEventMouseMotion and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
 		_look_input += event.screen_relative
@@ -382,41 +409,58 @@ func _update_attack(delta: float) -> void:
 	if _weapon_anim_timer > 0.0:
 		_weapon_anim_timer = maxf(_weapon_anim_timer - delta, 0.0)
 		_update_weapon_attack_frame()
-	elif axe_sprite.animation == "shoot":
+	elif _current_weapon_slot == WEAPON_SLOT_HAMMER and axe_sprite.animation == "shoot":
 		_show_idle_viewmodel()
 
 
 func _perform_attack_hit() -> void:
-	interaction_ray.target_position = Vector3(0.0, 0.0, -attack_range)
-	interaction_ray.force_raycast_update()
+	var from: Vector3 = camera.global_position
+	var to: Vector3 = from + (-camera.global_transform.basis.z * attack_range)
+	var query := PhysicsRayQueryParameters3D.create(from, to)
+	query.exclude = [self]
+	query.collide_with_areas = true
+	var result := get_world_3d().direct_space_state.intersect_ray(query)
 
-	if not interaction_ray.is_colliding():
+	if result.is_empty():
 		return
 
-	var collider := interaction_ray.get_collider()
+	var collider = result["collider"]
 	if collider == null:
 		return
 
-	if collider.has_method("take_damage"):
-		collider.take_damage(attack_damage)
-	elif collider.has_method("hit"):
-		collider.hit(attack_damage)
-	elif collider.has_method("apply_damage"):
-		collider.apply_damage(attack_damage)
+	_play_hammer_hit()
+	var hit_position: Vector3 = result["position"]
+	var hit_target = collider
+
+	if collider is Area3D:
+		hit_target = collider.get_parent()
+
+	if hit_target == null:
+		return
+
+	if hit_target.has_method("apply_hit"):
+		hit_target.apply_hit(attack_damage, hit_position)
+	elif hit_target.has_method("take_damage"):
+		hit_target.take_damage(attack_damage)
+	elif hit_target.has_method("hit"):
+		hit_target.hit(attack_damage)
+	elif hit_target.has_method("apply_damage"):
+		hit_target.apply_damage(attack_damage)
 
 
 func _update_weapon_viewmodel(blend: float) -> void:
 	var viewport_size: Vector2 = get_viewport().get_visible_rect().size
-	var current_frame_size: Vector2 = weapon_canvas_size * axe_sprite.scale
+	var active_weapon_sprite := _get_active_weapon_sprite()
+	var current_frame_size: Vector2 = weapon_canvas_size * active_weapon_sprite.scale
 	var animation_offset: Vector2 = shoot_viewmodel_offset
 
-	if axe_sprite.animation == "idle":
+	if _current_weapon_slot != WEAPON_SLOT_HAMMER or axe_sprite.animation == "idle":
 		animation_offset = idle_viewmodel_offset
 
 	var screen_anchor: Vector2 = viewport_size - weapon_screen_margin + attack_viewmodel_offset
-	var base_position: Vector2 = screen_anchor - current_frame_size + animation_offset * axe_sprite.scale
-	axe_sprite.position = base_position.round()
-	axe_sprite.rotation = 0.0
+	var base_position: Vector2 = screen_anchor - current_frame_size + animation_offset * active_weapon_sprite.scale
+	active_weapon_sprite.position = base_position.round()
+	active_weapon_sprite.rotation = 0.0
 
 	var left_frame_size: Vector2 = left_hand_canvas_size * left_hand_sprite.scale
 	var left_screen_anchor := Vector2(
@@ -432,11 +476,15 @@ func _update_weapon_viewmodel(blend: float) -> void:
 
 
 func _show_idle_viewmodel() -> void:
-	axe_sprite.play("idle")
-	axe_sprite.frame = 0
+	var active_weapon_sprite := _get_active_weapon_sprite()
+	active_weapon_sprite.play("idle")
+	active_weapon_sprite.frame = 0
 
 
 func _update_weapon_attack_frame() -> void:
+	if _current_weapon_slot != WEAPON_SLOT_HAMMER:
+		return
+
 	var total_duration: float = maxf(weapon_shoot_visual_duration, 0.001)
 	var elapsed: float = total_duration - _weapon_anim_timer
 	var progress: float = clampf(elapsed / total_duration, 0.0, 0.9999)
@@ -448,3 +496,55 @@ func _update_weapon_attack_frame() -> void:
 	var frame_index: int = mini(int(progress * frame_count), frame_count - 1)
 	axe_sprite.animation = "shoot"
 	axe_sprite.frame = frame_index
+
+
+func _play_hammer_hit() -> void:
+	hammer_hit_player.pitch_scale = 1.0 + _footstep_rng.randf_range(-hammer_hit_pitch_randomness, hammer_hit_pitch_randomness)
+	hammer_hit_player.play()
+
+
+func _set_weapon_slot(slot: int) -> void:
+	if slot == _current_weapon_slot and (axe_sprite.visible or gun_sprite.visible):
+		return
+
+	_current_weapon_slot = slot
+	_weapon_anim_timer = 0.0
+	_attack_timer = 0.0
+	_attack_recover_timer = 0.0
+	_attack_hit_applied = false
+
+	axe_sprite.visible = slot == WEAPON_SLOT_HAMMER
+	gun_sprite.visible = slot == WEAPON_SLOT_GUN
+
+	if axe_sprite.visible:
+		axe_sprite.animation = "idle"
+		axe_sprite.frame = 0
+		axe_sprite.play("idle")
+
+	if gun_sprite.visible:
+		gun_sprite.animation = "idle"
+		gun_sprite.frame = 0
+		gun_sprite.play("idle")
+
+
+func _get_active_weapon_sprite() -> AnimatedSprite2D:
+	if _current_weapon_slot == WEAPON_SLOT_GUN:
+		return gun_sprite
+	return axe_sprite
+
+
+func _cycle_weapon(direction: int) -> void:
+	if direction == 0:
+		return
+
+	if direction > 0:
+		if _current_weapon_slot == WEAPON_SLOT_HAMMER:
+			_set_weapon_slot(WEAPON_SLOT_GUN)
+		else:
+			_set_weapon_slot(WEAPON_SLOT_HAMMER)
+		return
+
+	if _current_weapon_slot == WEAPON_SLOT_GUN:
+		_set_weapon_slot(WEAPON_SLOT_HAMMER)
+	else:
+		_set_weapon_slot(WEAPON_SLOT_GUN)

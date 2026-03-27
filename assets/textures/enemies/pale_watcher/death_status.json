@@ -1,0 +1,29 @@
+{ "frames": [
+   {
+    "filename": "death_status 0.aseprite",
+    "frame": { "x": 0, "y": 0, "w": 96, "h": 128 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 96, "h": 128 },
+    "sourceSize": { "w": 96, "h": 128 },
+    "duration": 100
+   },
+   {
+    "filename": "death_status 1.aseprite",
+    "frame": { "x": 96, "y": 0, "w": 96, "h": 128 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 96, "h": 128 },
+    "sourceSize": { "w": 96, "h": 128 },
+    "duration": 100
+   }
+ ],
+ "meta": {
+  "app": "http://www.aseprite.org/",
+  "version": "1.x-dev",
+  "image": "death_status.png",
+  "format": "RGBA8888",
+  "size": { "w": 192, "h": 128 },
+  "scale": "1"
+ }
+}
