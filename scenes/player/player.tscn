@@ -2,6 +2,7 @@
 
 [ext_resource type="Script" uid="uid://btakc1sgqxr48" path="res://scenes/player/player.gd" id="1_8afob"]
 [ext_resource type="Texture2D" uid="uid://c2voa08wid8su" path="res://assets/textures/weapons/axe/axe_idle.png" id="2_lvxji"]
+[ext_resource type="Texture2D" uid="uid://beqsivpsak8y6" path="res://assets/textures/ruka/idle.png" id="3_2a6f5"]
 [ext_resource type="Texture2D" uid="uid://4npnhqufiehh" path="res://assets/textures/weapons/axe/axe_sheet.png" id="3_p47bc"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_0kuuv"]
@@ -60,7 +61,29 @@ animations = [{
 }],
 "loop": false,
 "name": &"shoot",
-"speed": 13.0
+"speed": 11.0
+}]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_0m2oa"]
+atlas = ExtResource("3_2a6f5")
+region = Rect2(0, 0, 53, 46)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_kitlb"]
+atlas = ExtResource("3_2a6f5")
+region = Rect2(53, 0, 53, 46)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_6l23e"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_0m2oa")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_kitlb")
+}],
+"loop": true,
+"name": &"idle",
+"speed": 0.8
 }]
 
 [node name="Player" type="CharacterBody3D" unique_id=1979842964]
@@ -84,8 +107,15 @@ layer = 5
 
 [node name="AxeSprite" type="AnimatedSprite2D" parent="WeaponCanvas" unique_id=113803401]
 position = Vector2(1530, 850)
-scale = Vector2(6, 6)
+scale = Vector2(8, 8)
 sprite_frames = SubResource("SpriteFrames_fm80t")
+animation = &"shoot"
+autoplay = "idle"
+centered = false
+
+[node name="LeftHandSprite" type="AnimatedSprite2D" parent="WeaponCanvas" unique_id=1764041954]
+scale = Vector2(8, 8)
+sprite_frames = SubResource("SpriteFrames_6l23e")
 animation = &"idle"
 autoplay = "idle"
 centered = false

@@ -10,6 +10,7 @@ const FOOTSTEP_STREAMS: Array[AudioStream] = [
 @export var speed: float = 5.0 
 @export var walk_speed: float = 2.35
 @export var sprint_speed: float = 7.8
+@export var backward_speed_multiplier: float = 0.82
 @export var ground_acceleration: float = 22.0
 @export var ground_deceleration: float = 26.0
 @export var sprint_ground_acceleration: float = 34.0
@@ -64,11 +65,15 @@ const FOOTSTEP_STREAMS: Array[AudioStream] = [
 @export var idle_viewmodel_offset: Vector2 = Vector2(61, 0)
 @export var shoot_viewmodel_offset: Vector2 = Vector2.ZERO
 @export var weapon_shoot_visual_duration: float = 0.22
+@export var left_hand_screen_margin: Vector2 = Vector2(0, 0)
+@export var left_hand_viewmodel_offset: Vector2 = Vector2(0, 0)
+@export var left_hand_canvas_size: Vector2 = Vector2(53, 46)
 
 @onready var camera: Camera3D = $Camera3D
 @onready var footstep_player: AudioStreamPlayer3D = $AudioStreamPlayer3D
 @onready var interaction_ray: RayCast3D = $RayCast3D
 @onready var axe_sprite: AnimatedSprite2D = $WeaponCanvas/AxeSprite
+@onready var left_hand_sprite: AnimatedSprite2D = $WeaponCanvas/LeftHandSprite
 
 var _camera_pitch: float = 0.0
 var _camera_base_position: Vector3
@@ -104,7 +109,9 @@ func _ready() -> void:
 	_footstep_rng.randomize()
 	footstep_player.volume_db = footstep_volume_db
 	axe_sprite.visible = true
+	left_hand_sprite.visible = true
 	_show_idle_viewmodel()
+	left_hand_sprite.play("idle")
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -164,8 +171,13 @@ func _physics_process(delta: float) -> void:
 		_current_speed = speed
 
 	if move_dir != Vector3.ZERO:
-		var target_velocity_x := move_dir.x * _current_speed
-		var target_velocity_z := move_dir.z * _current_speed
+		var movement_speed := _current_speed
+		if input_dir.y > 0.0:
+			movement_speed *= lerpf(1.0, backward_speed_multiplier, input_dir.y)
+
+		_current_speed = movement_speed
+		var target_velocity_x := move_dir.x * movement_speed
+		var target_velocity_z := move_dir.z * movement_speed
 
 		if is_on_floor():
 			velocity.x = move_toward(velocity.x, target_velocity_x, current_ground_acceleration * delta)
@@ -405,6 +417,18 @@ func _update_weapon_viewmodel(blend: float) -> void:
 	var base_position: Vector2 = screen_anchor - current_frame_size + animation_offset * axe_sprite.scale
 	axe_sprite.position = base_position.round()
 	axe_sprite.rotation = 0.0
+
+	var left_frame_size: Vector2 = left_hand_canvas_size * left_hand_sprite.scale
+	var left_screen_anchor := Vector2(
+		left_hand_screen_margin.x,
+		viewport_size.y - left_hand_screen_margin.y
+	) + left_hand_viewmodel_offset
+	var left_base_position := Vector2(
+		left_screen_anchor.x,
+		left_screen_anchor.y - left_frame_size.y
+	)
+	left_hand_sprite.position = left_base_position.round()
+	left_hand_sprite.rotation = 0.0
 
 
 func _show_idle_viewmodel() -> void:
